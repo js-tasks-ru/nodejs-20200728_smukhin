@@ -9,28 +9,19 @@ class LineSplitStream extends stream.Transform {
   }
 
   _transform(chunk, encoding, callback) {
-    const string = chunk.toString(this.encoding);
-    console.log(chunk);
-    callback();
+    const string = this.data + chunk.toString(this.encoding);
+    const text = string.split(os.EOL);
+    this.data = text.pop();
+
+    for (const line of text) {
+      this.push(line);
+    }
+    callback(null);
   }
 
   _flush(callback) {
-    callback();
+    this.push(this.data);
+    callback(null);
   }
 }
-
-const lines = new LineSplitStream({
-  encoding: 'utf-8',
-});
-
-function onData(line) {
-  console.log(line);
-}
-
-lines.on('data', onData);
-
-lines.write(`первая строка${os.EOL}вторая строка${os.EOL}третья строка`);
-
-lines.end();
-
 module.exports = LineSplitStream;
